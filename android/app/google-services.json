@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "557393969127",
+    "firebase_url": "https://simple-9cc25-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "simple-9cc25",
+    "storage_bucket": "simple-9cc25.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:557393969127:android:2469870d9f094a53de0742",
+        "android_client_info": {
+          "package_name": "com.example.vikrant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDs0hNoFCYqX8pmKikFluZ82sKvJvji_9k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
