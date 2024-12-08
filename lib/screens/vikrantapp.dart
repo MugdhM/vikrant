@@ -1,25 +1,12 @@
+import 'package:external_app_launcher/external_app_launcher.dart';
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
+import 'package:vikrant/screens/detail_screen.dart';
+import 'package:vikrant/screens/live_location.dart';
+import 'package:vikrant/screens/notification_screen.dart';
+import 'package:vikrant/screens/video_stream_page.dart';
 
-void main() {
-  runApp(const VikrantApp());
-}
-
-class VikrantApp extends StatelessWidget {
-  const VikrantApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const VikrantScreen(),
-    );
-  }
-}
 
 class VikrantScreen extends StatefulWidget {
   const VikrantScreen({Key? key}) : super(key: key);
@@ -50,7 +37,7 @@ class _VikrantScreenState extends State<VikrantScreen>
   void _navigateToNotifications(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const NotificationScreen()),
+      MaterialPageRoute(builder: (context) =>  AlertScreen()),
     );
   }
 
@@ -127,95 +114,108 @@ class _VikrantScreenState extends State<VikrantScreen>
                 // Header
                 Padding(
                   padding: const EdgeInsets.all(20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      FadeTransition(
-                        opacity: _controller,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                              begin: const Offset(-0.5, 0),
-                              end: Offset.zero)
-                              .animate(_controller),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Welcome',
-                                style: TextStyle(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  height: 1.2,
-                                ),
-                              ),
-                              const Text(
-                                'to Vikrant!',
-                                style: TextStyle(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  height: 1.2,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  dateFormat.format(now),
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.9),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Notification Button
-                      ScaleTransition(
-                        scale: _controller,
-                        child: GestureDetector(
-                          onTap: () => _navigateToNotifications(context),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.1),
-                              ),
-                            ),
-                            child: Stack(
-                              children: [
-                                const Icon(
-                                  Icons.notifications_none_rounded,
-                                  color: Colors.white,
-                                  size: 28,
-                                ),
-                                Positioned(
-                                  right: 0,
-                                  top: 0,
-                                  child: Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          FadeTransition(
+                            opacity: _controller,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                  begin: const Offset(-0.5, 0),
+                                  end: Offset.zero)
+                                  .animate(_controller),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Welcome',
+                                    style: TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      height: 1.2,
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const Text(
+                                    'to Vikrant!',
+                                    style: TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      dateFormat.format(now),
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
+                          // Notification Button
+                          ScaleTransition(
+                            scale: _controller,
+                            child: GestureDetector(
+                              onTap: () => _navigateToNotifications(context),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.1),
+                                  ),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    const Icon(
+                                      Icons.notifications_none_rounded,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                    Positioned(
+                                      right: 0,
+                                      top: 0,
+                                      child: Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                      Row(
+                        children: [
+                          Image.asset("assets/images/Weather.png",scale: 5,),
+                          SizedBox(width: 10,),
+                          Text("21",style: TextStyle(fontSize: 25,color: Colors.white),),
+                          Text("°C",style: TextStyle(fontSize: 30,color: Colors.white),)
+                        ],
+                      )
                     ],
                   ),
                 ),
@@ -434,22 +434,27 @@ class _VikrantScreenState extends State<VikrantScreen>
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(15),
-          onTap: () {
+          onTap: ()async {
             // Add navigation logic based on menu item title
             if (title == 'Control UI') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ControlUIScreen()),
-              );
+                await LaunchApp.openApp(
+                  androidPackageName: 'com.electro_tex.bluetoothcar',
+                );
             } else if (title == 'Live Feed') {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const LiveFeedScreen()),
+                MaterialPageRoute(
+                  builder: (context) =>
+                  const VideoStreamPage(),
+                ),
               );
             } else if (title == 'Location') {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const LocationScreen()),
+                MaterialPageRoute(
+                  builder: (context) =>
+                      RealTimeLocationMap(),
+                ),
               );
             }
           },
@@ -502,49 +507,4 @@ class _VikrantScreenState extends State<VikrantScreen>
 }
 
 // Enhanced Notification Screen
-class NotificationScreen extends StatelessWidget {
-  const NotificationScreen({Key? key}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Notifications',
-          style: TextStyle(color: Colors.black),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Lottie.asset(
-              'assets/images/Hello.json',
-              width: 200,
-            ),
-            const Text(
-              'No new notifications.',
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// New Detail Screen
-class DetailScreen extends StatelessWidget {
-  const DetailScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
