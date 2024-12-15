@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:vikrant/screens/vikrantapp.dart';
-import 'home_screen.dart';
 
 class OnBoardingPage extends StatefulWidget {
   const OnBoardingPage({super.key});
@@ -14,192 +13,241 @@ class OnBoardingPageState extends State<OnBoardingPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  final List<OnboardingData> onboardingData = [
+    OnboardingData(
+      title: "Reclaiming Our Waterways",
+      description: "Invasive aquatic plant disrupting ecosystems and biodiversity.",
+      imagePath: 'page1.jpeg',
+      isLottie: false,
+    ),
+    OnboardingData(
+      title: "Technology Meets Conservation",
+      description: "Integrating solar technology and AI to restore and manage aquatic ecosystems.",
+      imagePath: 'page2.json',
+      isLottie: true,
+    ),
+    OnboardingData(
+      title: "Join Us in Making a Difference",
+      description: "Revitalizing water bodies, boosting eco-tourism through VIKRANT.",
+      imagePath: 'page3.jpg',
+      isLottie: false,
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   void _onIntroEnd(context) {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => VikrantScreen()),
+      MaterialPageRoute(builder: (_) => const VikrantScreen()),
     );
   }
-
-  Widget _buildLottieAnimation(String assetName) {
-    return Lottie.asset('assets/images/$assetName');
-  }
-
-  Widget _buildImage(String assetName, [double width = 350]) {
-    return Image.asset('assets/images/$assetName', width: width);
-  }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          // Skip button
-          Padding(
-            padding: const EdgeInsets.only(top: 50.0, right: 24.0),
-            child: Align(
-              alignment: Alignment.topRight,
-              child: _currentPage != 2
-                  ? GestureDetector(
-                onTap: () => _onIntroEnd(context),
-                child: const Text(
-                  'Skip',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16.0,
-                    color: Colors.blue,
-                  ),
-                ),
-              )
-                  : const SizedBox.shrink(),
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Color(0xFFF5F5F5)],
           ),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (int page) {
-                setState(() {
-                  _currentPage = page;
-                });
-              },
-              physics: _currentPage == 2
-                  ? const NeverScrollableScrollPhysics()
-                  : const BouncingScrollPhysics(),
-              children: [
-                _buildOnboardingPage(
-                  title: "Reclaiming Our Waterways",
-                  body: "Invasive aquatic plant disrupting ecosystems and biodiversity.",
-                  animation: _buildImage(
-                      'page1.jpeg'), // Use an image instead of Lottie animation
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildSkipButton(),
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (int page) => setState(() => _currentPage = page),
+                  physics: _currentPage == 2
+                      ? const NeverScrollableScrollPhysics()
+                      : const BouncingScrollPhysics(),
+                  itemCount: onboardingData.length,
+                  itemBuilder: (context, index) => _buildPage(onboardingData[index]),
                 ),
+              ),
+              _buildBottomNavigation(),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-                _buildOnboardingPage(
-                  title: "Technology Meets Conservation",
-                  body:
-                  "Integrating solar technology and AI to restore and manage aquatic ecosystems.",
-                  animation: _buildLottieAnimation('page2.json'),
-                ),
-                _buildOnboardingPage(
-                  title: "Join Us in Making a Difference",
-                  body:
-                  "Revitalizing water bodies, boosting eco-tourism through VIKRANT.",
-                  animation: _buildImage('page3.jpg'),
-                  isLastPage: true,
-                ),
-              ],
+  Widget _buildSkipButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: _currentPage != 2
+            ? TextButton(
+          onPressed: () => _onIntroEnd(context),
+          child: const Text(
+            'Skip',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16.0,
+              color: Colors.blue,
             ),
           ),
-          // Navigation buttons
-          if (_currentPage != 2)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.ease,
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.blue,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 25.0,
-                      ),
-                    ),
+        )
+            : const SizedBox.shrink(),
+      ),
+    );
+  }
+
+  Widget _buildPage(OnboardingData data) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
-            ),
-          if (_currentPage == 2)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    _onIntroEnd(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15.0),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 17.0),
-                  ),
-                  child: const Text(
-                    'Get Started',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: data.isLottie
+                    ? Lottie.asset('assets/images/${data.imagePath}')
+                    : Image.asset(
+                  'assets/images/${data.imagePath}',
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
+          ),
+          const SizedBox(height: 40),
+          Text(
+            data.title,
+            style: const TextStyle(
+              fontSize: 28.0,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2D3142),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            data.description,
+            style: const TextStyle(
+              fontSize: 16.0,
+              color: Color(0xFF9098B1),
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildOnboardingPage({
-    required String title,
-    required String body,
-    required Widget animation,
-    bool isLastPage = false,
-  }) {
+  Widget _buildBottomNavigation() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
         children: [
-          // Top-aligned animation or image
-          Expanded(
-            flex: 2, // Adjust to control height proportion
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: animation,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              onboardingData.length,
+                  (index) => _buildDotIndicator(index),
             ),
           ),
-          // Center-aligned heading and subbody
-          Expanded(
-            flex: 2, // Adjust to control height proportion
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 22.0,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  // Ensures heading stays in one line
-                  maxLines: 1, // Restricts to one line
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  body,
-                  style: const TextStyle(
-                    fontSize: 19.0,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 20),
+          _currentPage == 2
+              ? _buildGetStartedButton()
+              : _buildNextButton(),
         ],
       ),
     );
   }
+
+  Widget _buildDotIndicator(int index) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      width: _currentPage == index ? 24 : 8,
+      height: 8,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        color: _currentPage == index
+            ? Colors.blue
+            : Colors.blue.withOpacity(0.2),
+      ),
+    );
+  }
+
+  Widget _buildNextButton() {
+    return ElevatedButton(
+      onPressed: () {
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        shape: const CircleBorder(),
+        padding: const EdgeInsets.all(16),
+        backgroundColor: Colors.blue,
+      ),
+      child: const Icon(
+        Icons.arrow_forward,
+        color: Colors.white,
+        size: 28,
+      ),
+    );
+  }
+
+  Widget _buildGetStartedButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () => _onIntroEnd(context),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: const Text(
+          'Get Started',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class OnboardingData {
+  final String title;
+  final String description;
+  final String imagePath;
+  final bool isLottie;
+
+  OnboardingData({
+    required this.title,
+    required this.description,
+    required this.imagePath,
+    required this.isLottie,
+  });
 }

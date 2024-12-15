@@ -7,6 +7,7 @@ import 'screens/onboarding.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  // await FirebaseApi().initNotification();
 
   // Set preferred orientations
   SystemChrome.setPreferredOrientations([
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: SplashScreen(
+      home: const SplashScreen(
         nextScreen: OnBoardingPage(),
       ),
     );

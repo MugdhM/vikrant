@@ -1,4 +1,24 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Animated Notifications',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: AlertScreen(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
 
 class AlertData {
   final String title;
@@ -16,120 +36,94 @@ class AlertData {
   });
 }
 
-// Alert Screen
 class AlertScreen extends StatefulWidget {
   @override
   _AlertScreenState createState() => _AlertScreenState();
 }
 
-class _AlertScreenState extends State<AlertScreen> {
+class _AlertScreenState extends State<AlertScreen> with TickerProviderStateMixin {
   final List<AlertData> alerts = [
     AlertData(
-      title: "System Update Available",
-      message: "A new system update is ready to install",
-      icon: Icons.system_update,
-      time: "2 mins ago",
+      title: "Obstacle Ahead",
+      message: "Lookout obstacle ahead",
+      icon: Icons.warning_amber_rounded,
+      time: "Just Now",
       severity: "High",
     ),
     AlertData(
-      title: "Battery Low",
-      message: "Your device battery is below 15%",
+      title: "Battery Full",
+      message: "Your device battery is 100%",
       icon: Icons.battery_alert,
-      time: "5 mins ago",
-      severity: "Medium",
-    ),
-    AlertData(
-      title: "New Message",
-      message: "You have received a new message",
-      icon: Icons.message,
-      time: "10 mins ago",
+      time: "Just Now",
       severity: "Low",
     ),
     AlertData(
-      title: "Security Alert",
-      message: "Unusual login attempt detected",
-      icon: Icons.security,
-      time: "15 mins ago",
-      severity: "High",
-    ),
-    AlertData(
-      title: "Storage Full",
-      message: "Device storage is almost full",
-      icon: Icons.storage,
-      time: "20 mins ago",
-      severity: "Medium",
-    ),
-    AlertData(
-      title: "WiFi Disconnected",
-      message: "Your device lost WiFi connection",
-      icon: Icons.wifi_off,
-      time: "25 mins ago",
-      severity: "Low",
-    ),
-    AlertData(
-      title: "Calendar Event",
-      message: "Upcoming meeting in 30 minutes",
-      icon: Icons.event,
-      time: "30 mins ago",
+      title: "Carriage Full",
+      message: "The Carriage is Full Please Unload",
+      icon: Icons.check_box,
+      time: "Just Now",
       severity: "Medium",
     ),
   ];
 
-  void _handleAlertTap(AlertData alert) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(alert.title),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(alert.message),
-              SizedBox(height: 12),
-              Text(
-                'Severity: ${alert.severity}',
-                style: TextStyle(
-                  color: _getSeverityTextColor(alert.severity),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'Time: ${alert.time}',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Dismiss'),
-            ),
-          ],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        );
-      },
-    );
+  final List<AlertData> activeNotifications = [];
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  int currentIndex = 0;
+
+  void _showNextNotification() {
+    if (currentIndex < alerts.length) {
+      _showNotification(alerts[currentIndex]);
+      currentIndex++;
+    }
   }
 
-  Color _getSeverityTextColor(String severity) {
-    switch (severity.toLowerCase()) {
-      case 'high':
-        return Colors.red;
-      case 'medium':
-        return Colors.orange;
-      case 'low':
-        return Colors.green;
-      default:
-        return Colors.grey;
+  void _showNotification(AlertData alert) {
+    setState(() {
+      activeNotifications.insert(0, alert);
+      _listKey.currentState?.insertItem(0, duration: const Duration(milliseconds: 500));
+    });
+
+    Timer(const Duration(seconds: 10), () {
+      _dismissNotification(0);
+    });
+  }
+
+  void _dismissNotification(int index) {
+    if (index < activeNotifications.length) {
+      final removedItem = activeNotifications[index];
+      setState(() {
+        activeNotifications.removeAt(index);
+        _listKey.currentState?.removeItem(
+          index,
+              (context, animation) => _buildNotificationItem(removedItem, animation),
+          duration: const Duration(milliseconds: 300),
+        );
+      });
     }
+  }
+
+  Widget _buildNotificationItem(AlertData alert, Animation<double> animation) {
+    return SlideTransition(
+      position: animation.drive(
+        Tween<Offset>(
+          begin: const Offset(1.0, 0.0),
+          end: Offset.zero,
+        ).chain(CurveTween(curve: Curves.easeOutCubic)),
+      ),
+      child: FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(
+          scale: animation.drive(
+            Tween<double>(begin: 0.8, end: 1.0)
+                .chain(CurveTween(curve: Curves.easeOut)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: NotificationCard(alert: alert),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -137,48 +131,44 @@ class _AlertScreenState extends State<AlertScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios,
-            color: Colors.white,
-          ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: Text(
-          'Notifications',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+        title: const Text('Notifications'),
         centerTitle: true,
-        backgroundColor: Colors.blue,
-        elevation: 0,
       ),
-      body: Container(
-        padding: EdgeInsets.all(16),
-        child: ListView.builder(
-          itemCount: alerts.length,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () => _handleAlertTap(alerts[index]),
-              child: AlertBox(alert: alerts[index]),
-            );
-          },
+      body: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: AnimatedList(
+              key: _listKey,
+              initialItemCount: activeNotifications.length,
+              shrinkWrap: true,
+              itemBuilder: (context, index, animation) {
+                return _buildNotificationItem(activeNotifications[index], animation);
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: SizedBox(
+        width: 25.0, // Reduced button width
+        height: 25.0, // Reduced button height
+        child: FloatingActionButton(
+          onPressed: _showNextNotification,
+          backgroundColor: Colors.white, // Set the button color to white
+          elevation: 2.0, // Optional: Adjust the shadow effect
         ),
       ),
+
     );
   }
 }
 
-// Alert Box Widget
-class AlertBox extends StatelessWidget {
+class NotificationCard extends StatelessWidget {
   final AlertData alert;
 
-  const AlertBox({Key? key, required this.alert}) : super(key: key);
+  const NotificationCard({Key? key, required this.alert}) : super(key: key);
 
   Color _getSeverityColor() {
     switch (alert.severity.toLowerCase()) {
@@ -209,93 +199,63 @@ class AlertBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: Offset(0, 3),
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _getSeverityColor(),
-                borderRadius: BorderRadius.circular(12),
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(16),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _getSeverityColor(),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(alert.icon, color: _getSeverityTextColor()),
+          ),
+          title: Text(
+            alert.title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text(alert.message),
+              const SizedBox(height: 4),
+              Text(
+                alert.time,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                ),
               ),
-              child: Icon(
-                alert.icon,
-                size: 24,
+            ],
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _getSeverityColor(),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              alert.severity,
+              style: TextStyle(
                 color: _getSeverityTextColor(),
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
               ),
             ),
-            SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          alert.title,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getSeverityColor(),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          alert.severity,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: _getSeverityTextColor(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    alert.message,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    alert.time,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

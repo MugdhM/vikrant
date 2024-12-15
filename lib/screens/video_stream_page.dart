@@ -13,7 +13,7 @@ class VideoStreamPage extends StatefulWidget {
 class _VideoStreamPageState extends State<VideoStreamPage> {
   // Configuration variables
   static const String _RASPBERRY_PI_IP =
-      '192.168.210.35'; // Replace with your Pi's IP
+      '192.168.104.35'; // Replace with your Pi's IP
   static const int _RECONNECT_DELAY = 5; // seconds
   static const int _MAX_FRAMES_BEFORE_RESET = 2000; // Reset after 2000 frames
 
@@ -53,7 +53,7 @@ class _VideoStreamPageState extends State<VideoStreamPage> {
     if (_connectionAttempts >= _MAX_CONNECTION_ATTEMPTS) {
       setState(() {
         _errorMessage =
-        'Max connection attempts reached. Check network/server.';
+            'Max connection attempts reached. Check network/server.';
         _isStreaming = false;
       });
       return;
@@ -70,14 +70,14 @@ class _VideoStreamPageState extends State<VideoStreamPage> {
       });
 
       final request = http.Request(
-          'GET', Uri.parse('http://$_RASPBERRY_PI_IP:2204/video_feed'));
+          'GET', Uri.parse('http://$_RASPBERRY_PI_IP:5000/video_feed'));
       _response = await request.send();
 
       if (_response!.statusCode == 200) {
         // Initialize StreamController here
         _streamController = StreamController<List<int>>();
         _response!.stream.listen(
-              (chunk) {
+          (chunk) {
             // Check if stream controller is still open before adding
             if (_streamController != null && !_streamController!.isClosed) {
               _processVideoChunk(chunk);
@@ -110,7 +110,7 @@ class _VideoStreamPageState extends State<VideoStreamPage> {
 
         // Find end of image
         final endIndex =
-        _findSequence(_accumulatedBytes, endMarker, startIndex);
+            _findSequence(_accumulatedBytes, endMarker, startIndex);
         if (endIndex == -1) break;
 
         // Extract complete image
@@ -198,13 +198,13 @@ class _VideoStreamPageState extends State<VideoStreamPage> {
           ),
           child: _latestFrame != null
               ? Image.memory(
-            _latestFrame!,
-            gaplessPlayback: true,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(Icons.broken_image, color: Colors.red);
-            },
-          )
+                  _latestFrame!,
+                  gaplessPlayback: true,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(Icons.broken_image, color: Colors.red);
+                  },
+                )
               : const CircularProgressIndicator(),
         ),
         // Diagnostic information
@@ -224,7 +224,7 @@ class _VideoStreamPageState extends State<VideoStreamPage> {
           IconButton(
             icon: Icon(_autoReconnect ? Icons.refresh : Icons.play_disabled),
             tooltip:
-            _autoReconnect ? 'Auto-Reconnect: ON' : 'Auto-Reconnect: OFF',
+                _autoReconnect ? 'Auto-Reconnect: ON' : 'Auto-Reconnect: OFF',
             onPressed: () {
               setState(() {
                 _autoReconnect = !_autoReconnect;
@@ -237,19 +237,19 @@ class _VideoStreamPageState extends State<VideoStreamPage> {
         child: _isStreaming
             ? _buildStreamView()
             : Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 20),
-            Text(
-              _errorMessage.isNotEmpty
-                  ? _errorMessage
-                  : 'Connecting to video stream...',
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 20),
+                  Text(
+                    _errorMessage.isNotEmpty
+                        ? _errorMessage
+                        : 'Connecting to video stream...',
+                    style: Theme.of(context).textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
       ),
     );
   }

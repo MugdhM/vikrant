@@ -1,12 +1,15 @@
-import 'package:external_app_launcher/external_app_launcher.dart';
 import 'package:flutter/material.dart';
+import 'package:external_app_launcher/external_app_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:vikrant/screens/3d_model.dart';
+import 'package:vikrant/screens/chatbot_screen.dart';
 import 'package:vikrant/screens/detail_screen.dart';
 import 'package:vikrant/screens/live_location.dart';
 import 'package:vikrant/screens/notification_screen.dart';
 import 'package:vikrant/screens/video_stream_page.dart';
-
+import 'package:firebase_database/firebase_database.dart';
+import 'package:syncfusion_flutter_gauges/gauges.dart';
 
 class VikrantScreen extends StatefulWidget {
   const VikrantScreen({Key? key}) : super(key: key);
@@ -18,6 +21,11 @@ class VikrantScreen extends StatefulWidget {
 class _VikrantScreenState extends State<VikrantScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  final DatabaseReference _database = FirebaseDatabase.instance.ref();
+
+  double tdsValue = 0.0;
+  double batteryValue = 0.0;
+  late BuildContext _context;
 
   @override
   void initState() {
@@ -25,7 +33,34 @@ class _VikrantScreenState extends State<VikrantScreen>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
-    )..forward();
+    )
+      ..forward();
+
+    _setupRealtimeUpdates();
+  }
+
+  void _setupRealtimeUpdates() {
+    _database
+        .child('test/tds')
+        .onValue
+        .listen((event) {
+      if (event.snapshot.value != null) {
+        setState(() {
+          tdsValue = double.parse(event.snapshot.value.toString());
+        });
+      }
+    });
+
+    _database
+        .child('test/battery')
+        .onValue
+        .listen((event) {
+      if (event.snapshot.value != null) {
+        setState(() {
+          batteryValue = double.parse(event.snapshot.value.toString());
+        });
+      }
+    });
   }
 
   @override
@@ -37,9 +72,10 @@ class _VikrantScreenState extends State<VikrantScreen>
   void _navigateToNotifications(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) =>  AlertScreen()),
+      MaterialPageRoute(builder: (context) => AlertScreen()),
     );
   }
+
 
   void _onFabTapped(BuildContext context) {
     Navigator.push(
@@ -72,6 +108,7 @@ class _VikrantScreenState extends State<VikrantScreen>
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final dateFormat = DateFormat('dd MMM, yyyy');
+    _context = context;
 
     return Scaffold(
       backgroundColor: const Color(0xFF2C3E50),
@@ -210,10 +247,21 @@ class _VikrantScreenState extends State<VikrantScreen>
                       ),
                       Row(
                         children: [
-                          Image.asset("assets/images/Weather.png",scale: 5,),
-                          SizedBox(width: 10,),
-                          Text("21",style: TextStyle(fontSize: 25,color: Colors.white),),
-                          Text("°C",style: TextStyle(fontSize: 30,color: Colors.white),)
+                          Image.asset(
+                            "assets/images/Weather.png",
+                            scale: 5,
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          const Text(
+                            "21",
+                            style: TextStyle(fontSize: 25, color: Colors.white),
+                          ),
+                          const Text(
+                            "°C",
+                            style: TextStyle(fontSize: 30, color: Colors.white),
+                          )
                         ],
                       )
                     ],
@@ -223,8 +271,8 @@ class _VikrantScreenState extends State<VikrantScreen>
                 // Draggable Sheet
                 Expanded(
                   child: DraggableScrollableSheet(
-                    initialChildSize: 0.65,
-                    minChildSize: 0.65,
+                    initialChildSize: 1.0,
+                    minChildSize: 1.0,
                     maxChildSize: 1.0,
                     builder: (context, scrollController) {
                       return Container(
@@ -266,12 +314,17 @@ class _VikrantScreenState extends State<VikrantScreen>
         scale: _controller,
         child: SizedBox(
           width: 70,
-          height:70,
+          height: 70,
           child: FloatingActionButton(
-            onPressed: () => _onFabTapped(context),
+            onPressed: () {
+              // Navigate to ChatBotApp() screen
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => ChatbotScreen()));
+            },
             backgroundColor: Colors.white,
             elevation: 4.0,
-            child: ClipOval( // Ensures circular shape for the Lottie asset
+            child: ClipOval(
+              // Ensures circular shape for the Lottie asset
               child: SizedBox(
                 width: 70,
                 height: 70,
@@ -302,25 +355,188 @@ class _VikrantScreenState extends State<VikrantScreen>
         ),
         const SizedBox(height: 15),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildStatusCard(
-              icon: Icons.battery_charging_full,
-              value: '99%',
-              label: 'Battery',
-              color: Colors.green,
+            buildGaugeCard(
+              context: context,
+              title: 'TDS Level (ppm)',
+              value: tdsValue,
+              maxValue: 400,
+              gaugeBuilder: buildTDSGauge,
             ),
-            const SizedBox(width: 15),
-            _buildStatusCard(
-              icon: Icons.water_drop,
-              value: '7.2',
-              label: 'PH Level',
-              color: Colors.blue,
+            buildGaugeCard(
+              context: context,
+              title: 'Battery Level %',
+              value: batteryValue,
+              maxValue: 100,
+              gaugeBuilder: buildBatteryGauge,
             ),
           ],
         ),
       ],
     );
   }
+
+  Widget buildGaugeCard({
+    required BuildContext context,
+    required String title,
+    required double value,
+    required double maxValue,
+    required Widget Function(double, double) gaugeBuilder,
+  }) {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.4,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+              height: 70,
+              child: gaugeBuilder(value, maxValue)
+          ),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          Text(
+            '${value.toInt()}',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: _getColorForValue(value, maxValue),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getColorForValue(double value, double maxValue) {
+    // Automatically detect gauge type based on maxValue
+    if (maxValue == 100) {
+      // Battery logic
+      if (value > (maxValue * 0.75)) {
+        return Colors.green;
+      } else if (value >= (maxValue * 0.5)) {
+        return Colors.yellow;
+      } else {
+        return Colors.red;
+      }
+    } else if (maxValue <= 400) {
+      // TDS logic (assuming TDS typically ranges up to 400 ppm)
+      if (value < (maxValue * 0.3)) {
+        return Colors.green; // Low TDS is good
+      } else if (value < (maxValue * 0.7)) {
+        return Colors.yellow; // Medium TDS
+      } else {
+        return Colors.red; // High TDS is problematic
+      }
+    } else {
+      // Default color logic for other types of gauges
+      return Colors.blue;
+    }
+  }
+
+  Widget buildTDSGauge(double value, double maxValue) {
+    return SfRadialGauge(
+      enableLoadingAnimation: true,
+      animationDuration: 2000,
+
+      axes: [
+        RadialAxis(
+          minimum: 0,
+maximumLabels: 0,
+          labelOffset: 0,
+          showFirstLabel: false,
+          showAxisLine: false,
+          maximum: maxValue,
+          startAngle: 180,
+          endAngle: 0,
+          showLabels: false,
+          showTicks: false,
+          radiusFactor: 1.0,
+          canScaleToFit: true,
+          ranges: [
+            GaugeRange(
+              startValue: 0,
+              endValue: maxValue,
+              startWidth: 15,
+              endWidth: 15,
+              color: Colors.grey.shade200,
+            ),
+            GaugeRange(
+              startValue: 0,
+              endValue: value,
+              startWidth: 15,
+              endWidth: 15,
+              gradient: const SweepGradient(
+                colors: [Colors.green, Colors.yellow, Colors.red],
+                stops: [0.5, 0.75, 1.0],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget buildBatteryGauge(double value, double maxValue) {
+    return SfRadialGauge(
+      enableLoadingAnimation: true,
+      animationDuration: 2000,
+      axes: [
+        RadialAxis(
+          minimum: 0,
+          maximumLabels: 0,
+          labelOffset: 0,
+          showFirstLabel: false,
+          showAxisLine: false,
+          maximum: maxValue,
+          startAngle: 180,
+          endAngle: 0,
+          showLabels: false,
+          showTicks: false,
+          radiusFactor: 1.0,
+          canScaleToFit: true,
+          ranges: [
+            GaugeRange(
+              startValue: 0,
+              endValue: maxValue,
+              startWidth: 15,
+              endWidth: 15,
+              color: Colors.grey.shade200,
+            ),
+            GaugeRange(
+              startValue: 0,
+              endValue: value,
+              startWidth: 15,
+              endWidth: 15,
+              gradient: const SweepGradient(
+                colors: [Colors.red, Colors.yellow, Colors.green],
+                stops: [0.4, 0.8, 1.0],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
 
   Widget _buildMenuSection() {
     return Column(
@@ -335,10 +551,11 @@ class _VikrantScreenState extends State<VikrantScreen>
         ),
         const SizedBox(height: 15),
         _buildMenuItem(
-          'Control UI',
-          Icons.settings,
+          'Controller',
+          Icons.gamepad,
           Colors.orange,
-          'Manage system settings',
+
+          'Manages boat direction',
         ),
         const SizedBox(height: 15),
         _buildMenuItem(
@@ -354,69 +571,21 @@ class _VikrantScreenState extends State<VikrantScreen>
           Colors.green,
           'Track current position',
         ),
+        const SizedBox(height: 15),
+        _buildMenuItem(
+          '3-D Model',
+          Icons.view_in_ar,
+          Colors.blueAccent,
+          'Model of the boat',
+        ),
       ],
     );
   }
 
-  Widget _buildStatusCard({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-            color: color.withOpacity(0.2),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem(
-      String title,
+  Widget _buildMenuItem(String title,
       IconData icon,
       Color color,
-      String subtitle,
-      ) {
+      String subtitle,) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -434,26 +603,31 @@ class _VikrantScreenState extends State<VikrantScreen>
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(15),
-          onTap: ()async {
+          onTap: () async {
             // Add navigation logic based on menu item title
-            if (title == 'Control UI') {
-                await LaunchApp.openApp(
-                  androidPackageName: 'com.electro_tex.bluetoothcar',
-                );
+            if (title == 'Controller') {
+              await LaunchApp.openApp(
+                androidPackageName: 'com.electro_tex.bluetoothcar',
+              );
             } else if (title == 'Live Feed') {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                  const VideoStreamPage(),
+                  builder: (context) => const VideoStreamPage(),
                 ),
               );
             } else if (title == 'Location') {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      RealTimeLocationMap(),
+                  builder: (context) => const RealTimeLocationMap(),
+                ),
+              );
+            }else if (title == '3-D Model') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const Modelviewer(),
                 ),
               );
             }
@@ -477,8 +651,7 @@ class _VikrantScreenState extends State<VikrantScreen>
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          fontSize: 18,
+                        style: const TextStyle(fontSize: 18,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -505,6 +678,3 @@ class _VikrantScreenState extends State<VikrantScreen>
     );
   }
 }
-
-// Enhanced Notification Screen
-
